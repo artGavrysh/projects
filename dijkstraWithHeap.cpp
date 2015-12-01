@@ -1,44 +1,28 @@
 #include <stdio.h>
-4 5
-1 2 10
-1 3 30
-2 3 5
-2 4 30
-3 4 10
-25
 
-5 7
-1 2 3
-2 3 4
-3 5 4
-1 4 4
-4 5 5
-2 4 2
-3 4 2
-
-9
 /* find the shortest path in a graph 
  * represent a graph as adjacency set
  * represent a search as a priority gueue - heap
  */
 
 #define MAX_N 1000000
+#define INF   100000000
 
-struct Node
+typedef struct Node
 {
-    int other;
+    int idx;
     int dist;
 
     Node() {}
 
     Node(int a, int b)
     {
-        this->other = a;
+        this->idx = a;
         this->dist = b;
     }
-};
+}Node;
 
-struct HeapElem 
+typedef struct HeapElem 
 {
     int node;
     long long absDist;
@@ -55,10 +39,10 @@ struct HeapElem
     {
         return this->absDist < other.absDist;
     }
-};
+}HeapElem;
 
 template <typename T>
-void swap(int *v, int i, int j)
+void swap(T *v, int i, int j)
 {
     T temp = v[i];
     v[i] = v[j];
@@ -157,18 +141,17 @@ class Vector
         }
 };
 
-struct NodeInfo
+typedef struct NodeInfo
 {
     bool visited;
     long long pathLen;
-}
-
+}NodeInfo;
 
 static Vector<Node> adjacency[MAX_N];
 static Heap<HeapElem> heap;
 static NodeInfo info[MAX_N];
 
-int dijkstra(int N, int source, int sink)
+long long dijkstra(int N, int from, int to)
 {
     int i;
     for (i = 0; i < N; ++i)
@@ -177,28 +160,27 @@ int dijkstra(int N, int source, int sink)
         info[i].pathLen = INF;
     }
     
-    heap.push(HeapElem(source, 0));
+    heap.push(HeapElem(from, 0));
     while (heap.size() > 0)
     {
-        HeapElem base = heap.pop();
-        visited[base.node] = true;
+        HeapElem current = heap.pop();
+        info[current.node].visited = true;
 
-        for (i = 0; i < adjacency[base.node].size(); ++i)
+        for (i = 0; i < adjacency[current.node].size(); ++i)
         {
-            Node neighbour = adjacency[base.node][i];
-            if (!info[neighbour.other])
+            Node neighbour = adjacency[current.node][i];
+            if (!info[neighbour.idx].visited)
             {
-                long long newDist = base.absDist + neighbour.dist;
-                if (other.dist > newDist)
+                long long newDist = current.absDist + neighbour.dist;
+                if (info[neighbour.idx].pathLen > newDist)
                 {
-                   other.dist = newDist;
-                   other.parent = base;
-                   heap.push(HeapElem(other, newDist));
+                   info[neighbour.idx].pathLen = newDist;
+                   heap.push(HeapElem(neighbour.idx, newDist));
                 }
             }
         }
     }
-    return 0;
+    return 0L;
 }
 
 int main()
@@ -213,9 +195,12 @@ int main()
         u--;
         v--;
 
-        adjacency[u].push(v, w);
-        adjacency[v].push(u, w);
+        adjacency[u].push(Node(v, w));
+        adjacency[v].push(Node(u, w));
     }
+    long long dist = dijkstra(N, 0, N-1);
+    
+    printf("%lld\n", dist);
 
     return 0;
 }
