@@ -22,12 +22,31 @@ int height(Node *node)
     if (NULL == node)
         return 0;
     
-    return N->height;
+    return node->height;
 }
 
-void rightRotate(Node **subtree)
+int getBalance(Node *node)
 {
-    Node *y = *subtree;
+    if (NULL == node)
+        return 0;
+    return (height(node->left) - height(node->right));
+}
+
+Node* createNode(char v)
+{
+    Node *newNode = NULL;
+
+    if ((newNode = malloc(sizeof(Node))) == NULL)
+        return NULL;
+    newNode->value = v;
+    newNode->left = NULL;
+    newNode->right = NULL;
+    newNode->height = 1;
+    return newNode;
+}
+
+Node* rightRotate(Node * y)
+{
     Node *x = y->left;
     Node *T2 = x->right;
 
@@ -38,64 +57,63 @@ void rightRotate(Node **subtree)
     //update height
     y->height = max(height(y->left), height(y->right)) + 1;
     x->height = max(height(x->left), height(x->right)) + 1;
+    
+    return x;
+}
 
-    *subtree = x;
-}http://www.geeksforgeeks.org/avl-tree-set-1-insertion/
-
-void insert(Node **root, char val)
-   
+Node* leftRotate(Node* x)
 {
-    Node *copy = *root;
-    if (NULL == copy)
+    Node* y = x->right;
+    Node* T2 = y->left;
+
+    //rotation
+    y->left = x;
+    x->right = T2;
+
+    x->height = max(height(x->left), height(x->right)) + 1;
+    y->height = max(height(y->left), height(y->right)) + 1;
+
+    return y;
+}
+
+Node* insert(Node* root, char val)
+{
+    int balance;
+
+    if (NULL == root)
+        return createNode(val);
+    
+    if (val < root->value)
+        root->left = insert(root->left, val);
+    else 
+        root->right = insert(root->right, val);
+
+    root->height = max(height(root->left), height(root->right)) + 1;
+
+    balance = getBalance(root);
+
+    printf("%d\n", balance);
+
+    //there could be 4 cases
+    if (balance > 1 && val < root->left->value)
+        return rightRotate(root);
+    
+    if (balance < -1 && val > root->right->value)
+        return leftRotate(root);
+
+    if (balance > 1 && val > root->left->value)
     {
-       if ((copy = (Node*)malloc(sizeof(Node))) == NULL)
-               return;
-       copy->value = val;
-       copy->left = NULL;
-       copy->right = NULL;
-       copy->balanceFactor = 0;
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
     }
-    else if (val < copy->value)
-        insert(&(copy->left), val);
-    else if (val > copy->value)
-        insert(&(copy->right), val);
-    
-    //rebalance
-    lh = height(copy->right);
-    rh = height(copy->left);
-    if ((lh - rh) > 2)
-        rotateRight(copy);
-    else if((rh - lh) > 2)
-        rotateLeft(copy);
 
-    *root = copy;
-}
+    if (balance < -1 && val < root->right->value)
+    {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
 
-void rotateRight(Node *subtree)
-{
-    Node *tempRoot, *tempLeaf;
-   
-    if (NULL == subtree->left || NULL == subtree->right)
-        return;
-    
-    tempLeaf = subtree->left->right;
-    tempRoot = subtree;
-    subtree = subtree->left;
-    tempRoot->left = tempLeaf;
-    subtree->right = tempRoot;
-}
-
-void rotateLeft(Node *subtree)
-{
-    Node *tempRoot, *templeaf;
-
-    if (NULL == subtree-left || NULL == subtree-right)
-        return;
-    tempLeaf = subtree->right->left;
-    tempRoot = subtree;
-    subtree = subtree->right;
-    tempRoot->right = tempLeaf;
-    subtree->left = tempRoot;
+    return root;
 }
 
 void inOrder(Node *root)
@@ -107,17 +125,13 @@ void inOrder(Node *root)
         inOrder(root->right);
 }
 
-int height(Node *root)
+void preOrder(Node *root)
 {
-    int hLeft, hRight;
-
-    if (NULL == root)
-        return 0;
-    else
+    if (NULL != root)
     {
-        hLeft = height(root->left);
-        hRight = height(root->right);
-        return ((hLeft >= hRight) ? hLeft : hRight) + 1;
+        printf("%c, ", root->value);
+        preOrder(root->left);
+        preOrder(root->right);
     }
 }
 
@@ -135,7 +149,13 @@ int main()
     }
 
     for(i = 0; i < lim && c <= 'z'; i++)
-        insert(&tree, c++);
+        tree = insert(tree, c++);
+
+    if (NULL != tree)
+        preOrder(tree);
+    printf("\n");
+    printf("LeftHeight: %d\n", height(tree->left));
+    printf("RightHeight: %d\n", height(tree->right));
     
     return 0;
 }
