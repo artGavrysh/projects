@@ -4,13 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_NODE 10000
+#define MAX_NODE 100000
 #define INF      1000000000000000
 
 typedef struct Node
 {
     int id;
-    int arc;
+    long long arc;
     struct Node *next;
 } Node;
 
@@ -35,15 +35,6 @@ Node *put(Node* root, int id, int length)
         root->next = put(root->next, id, length);
     return root;
 } 
-
-void *get(Node* root)
-{
-    while(root != NULL)
-    {
-        printf("%d, ", root->id+1);
-        root = root->next;
-    }
-}
 
 /*
  *   heap: has container and two methods push and pop with underlying methods bubleUp and bubleDown
@@ -187,24 +178,24 @@ long long dijkstra(int from, int to)
     while (heap.m_size > 0 && 1 != used[to])
     {
         base = pop(&heap);
-        printf("%d : ", base->node->id+1);
-        used[base->node->id] = 1;
-        tmp = adjacency[base->node->id];
-        while (tmp != NULL)
+        if (!used[base->node->id])
         {
-            printf("%d, ", tmp->id+1);
-            if (0 == used[tmp->id])
+            used[base->node->id] = 1;
+            tmp = adjacency[base->node->id];
+            while (tmp != NULL)
             {
-                newPath = base->path + tmp->arc;
-                if (newPath < dist[tmp->id])
+                if (0 == used[tmp->id])
                 {
-                    dist[tmp->id] = newPath;
-                    push(&heap, tmp, newPath);
+                    newPath = base->path + tmp->arc;
+                    if (newPath < dist[tmp->id])
+                    {
+                        dist[tmp->id] = newPath;
+                        push(&heap, tmp, newPath);
+                    }
                 }
+                tmp = tmp->next;
             }
-            tmp = tmp->next;
         }
-        printf("\n");
     }
     return dist[to];
 }
